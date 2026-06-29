@@ -1,4 +1,4 @@
-import { Admin, Resource, defaultDarkTheme } from 'react-admin';
+import { Admin, Resource } from 'react-admin';
 import EventIcon from '@mui/icons-material/Event';
 import PeopleIcon from '@mui/icons-material/People';
 import RoomIcon from '@mui/icons-material/Room';
@@ -7,6 +7,7 @@ import ViewAgendaIcon from '@mui/icons-material/ViewAgenda';
 import { authProvider } from './providers/authProvider';
 import { dataProvider } from './providers/dataProvider';
 import { Dashboard } from './components/Dashboard';
+import { LoginPage } from './components/LoginPage';
 import { EventList, EventCreate, EventEdit } from './pages/Events';
 import { SessionList, SessionCreate, SessionEdit } from './pages/Sessions';
 import { SpeakerList, SpeakerCreate, SpeakerEdit } from './pages/Speakers';
@@ -20,7 +21,7 @@ export default function App() {
       dataProvider={dataProvider}
       dashboard={Dashboard}
       title="EventSync Admin"
-      loginPage={undefined}
+      loginPage={LoginPage}
       theme={lightTheme}
       darkTheme={darkTheme}
       defaultTheme="dark"
