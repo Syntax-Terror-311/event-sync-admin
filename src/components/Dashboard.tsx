@@ -1,96 +1,153 @@
-import { Card, CardContent, Typography, Box, Grid, useTheme } from '@mui/material';
-import { Title } from 'react-admin';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+  Card,
+  CardContent,
+  Typography,
+  Box,
+  Grid,
+  useTheme,
+  CardActionArea,
+} from '@mui/material';
+import { Title, useDataProvider } from 'react-admin';
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
 } from 'recharts';
 
 const sessionData = [
-  { day: 'Lun', sessions: 2, speakers: 1 },
-  { day: 'Mar', sessions: 4, speakers: 3 },
-  { day: 'Mer', sessions: 3, speakers: 2 },
-  { day: 'Jeu', sessions: 7, speakers: 5 },
-  { day: 'Ven', sessions: 6, speakers: 4 },
-  { day: 'Sam', sessions: 5, speakers: 3 },
-  { day: 'Dim', sessions: 8, speakers: 6 },
+  { day: 'Lun', sessions: 280, speakers: 130 },
+  { day: 'Mar', sessions: 420, speakers: 210 },
+  { day: 'Mer', sessions: 360, speakers: 160 },
+  { day: 'Jeu', sessions: 520, speakers: 250 },
+  { day: 'Ven', sessions: 470, speakers: 230 },
+  { day: 'Sam', sessions: 530, speakers: 280 },
+  { day: 'Dim', sessions: 610, speakers: 320 },
 ];
+
+const formatCompactNumber = (value: number) => {
+  if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1).replace(/\.0$/, '')}B`;
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(1).replace(/\.0$/, '')}K`;
+  return String(value);
+};
+
+const AnimatedNumber = ({ value }: { value: number }) => {
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    let rafId: number;
+    const duration = 1200;
+    const start = performance.now();
+
+    const tick = (now: number) => {
+      const progress = Math.min((now - start) / duration, 1);
+      setCurrent(Math.round(value * progress));
+      if (progress < 1) {
+        rafId = requestAnimationFrame(tick);
+      }
+    };
+
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  }, [value]);
+
+  return <>{formatCompactNumber(current)}</>;
+};
 
 const StatTile = ({
   value,
   label,
   sub,
+  onClick,
+  loading,
 }: {
-  value: string | number;
+  value: number;
   label: string;
-  sub?: string;
+  sub: string;
+  onClick: () => void;
+  loading?: boolean;
 }) => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
 
   return (
-    <Card
+    <CardActionArea
+      onClick={onClick}
       sx={{
+        display: 'block',
         height: '100%',
-        position: 'relative',
+        borderRadius: 3,
         overflow: 'hidden',
         transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-        '&:hover': {
-          transform: 'translateY(-2px)',
-          boxShadow: isDark
-            ? '0 8px 32px rgba(124,58,237,0.25)'
-            : '0 8px 32px rgba(109,40,217,0.15)',
-        },
+        '&:hover': { transform: 'translateY(-3px)' },
       }}
     >
-      {/* Accent bar */}
-      <Box
+      <Card
         sx={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 3,
-          background: isDark
-            ? 'linear-gradient(90deg, #7c3aed, #a78bfa)'
-            : 'linear-gradient(90deg, #4c1d95, #7c3aed)',
+          height: '100%',
+          position: 'relative',
+          background: isDark ? '#120728' : '#ffffff',
+          border: isDark ? '1px solid rgba(167,139,250,0.15)' : '1px solid rgba(109,40,217,0.12)',
+          boxShadow: isDark ? '0 12px 32px rgba(0,0,0,0.18)' : '0 12px 32px rgba(109,40,217,0.08)',
         }}
-      />
-      <CardContent sx={{ pt: 3, pb: 2.5 }}>
-        <Typography
-          variant="h3"
+      >
+        <Box
           sx={{
-            fontFamily: '"Sora", sans-serif',
-            fontWeight: 700,
-            fontSize: '2.4rem',
-            lineHeight: 1,
-            color: isDark ? '#c4b5fd' : '#4c1d95',
-            mb: 0.5,
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 4,
+            background: isDark
+              ? 'linear-gradient(90deg, #7c3aed, #a78bfa)'
+              : 'linear-gradient(90deg, #4c1d95, #7c3aed)',
           }}
-        >
-          {value}
-        </Typography>
-        <Typography
-          variant="body2"
-          sx={{
-            fontWeight: 600,
-            color: isDark ? '#ede9fe' : '#2e1065',
-            fontSize: '0.82rem',
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em',
-            mb: 0.25,
-          }}
-        >
-          {label}
-        </Typography>
-        {sub && (
+        />
+        <CardContent sx={{ pt: 4, pb: 3 }}>
+          <Typography
+            variant="h3"
+            sx={{
+              fontFamily: '"Sora", sans-serif',
+              fontWeight: 700,
+              fontSize: '2.4rem',
+              lineHeight: 1,
+              color: isDark ? '#ede9fe' : '#3c1361',
+              mb: 0.75,
+            }}
+          >
+            {loading ? '...' : <AnimatedNumber value={value} />}
+          </Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 700,
+              color: isDark ? '#a78bfa' : '#6d28d9',
+              fontSize: '0.82rem',
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              mb: 1,
+            }}
+          >
+            {label}
+          </Typography>
           <Typography
             variant="caption"
-            sx={{ color: isDark ? 'rgba(167,139,250,0.6)' : 'rgba(109,40,217,0.5)', fontSize: '0.72rem' }}
+            sx={{
+              color: isDark ? 'rgba(167,139,250,0.65)' : 'rgba(109,40,217,0.65)',
+              fontSize: '0.78rem',
+            }}
           >
             {sub}
           </Typography>
-        )}
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </CardActionArea>
   );
 };
 
@@ -101,7 +158,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return (
     <Box
       sx={{
-        background: isDark ? '#1c0d38' : '#fff',
+        background: isDark ? '#1c0d38' : '#ffffff',
         border: `1px solid ${isDark ? 'rgba(167,139,250,0.2)' : 'rgba(109,40,217,0.15)'}`,
         borderRadius: 2,
         px: 2,
@@ -121,200 +178,159 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   );
 };
 
+const resourceStats = [
+  { key: 'events', label: 'Événements', sub: 'total depuis le lancement', path: '/events' },
+  { key: 'sessions', label: 'Sessions', sub: 'planifiées', path: '/sessions' },
+  { key: 'speakers', label: 'Intervenants', sub: 'experts inscrits', path: '/speakers' },
+  { key: 'rooms', label: 'Salles', sub: 'espaces réservés', path: '/rooms' },
+];
+
 export const Dashboard = () => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
+  const navigate = useNavigate();
 
   const chartAccent = isDark ? '#a78bfa' : '#7c3aed';
-  const chartSecondary = isDark ? '#7c3aed' : '#c4b5fd';
+  const chartSecondary = isDark ? '#7c3aed' : '#c4b1ff';
   const gridColor = isDark ? 'rgba(167,139,250,0.08)' : 'rgba(109,40,217,0.08)';
-  const axisColor = isDark ? 'rgba(167,139,250,0.4)' : 'rgba(109,40,217,0.4)';
+  const axisColor = isDark ? 'rgba(167,139,250,0.45)' : 'rgba(109,40,217,0.45)';
+
+  const dataProvider = useDataProvider();
+  const [stats, setStats] = useState(() =>
+    resourceStats.map((resource) => ({ ...resource, value: 0 }))
+  );
+  const [loadingStats, setLoadingStats] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    const loadStats = async () => {
+      try {
+        const responses = await Promise.all(
+          resourceStats.map((resource) =>
+            dataProvider.getList(resource.key, {
+              pagination: { page: 1, perPage: 1 },
+              sort: { field: 'id', order: 'ASC' },
+              filter: {},
+            })
+          )
+        );
+
+        if (!mounted) return;
+
+        setStats(
+          responses.map((response, index) => ({
+            ...resourceStats[index],
+            value: response.total ?? 0,
+          }))
+        );
+      } catch (error) {
+        console.error('Erreur de chargement des statistiques', error);
+      } finally {
+        if (mounted) setLoadingStats(false);
+      }
+    };
+
+    loadStats();
+    return () => {
+      mounted = false;
+    };
+  }, [dataProvider]);
 
   return (
-    <Box
-      sx={{
-        p: { xs: 2, md: 4 },
-        maxWidth: 1200,
-        mx: 'auto',
-        '@import': "url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=Inter:wght@400;500;600&display=swap')",
-      }}
-    >
+    <Box sx={{ p: { xs: 2, md: 4 }, width: '100%', maxWidth: '100%', mx: 0 }}>
       <Title title="EventSync Admin" />
 
-      {/* Header */}
       <Box mb={4}>
         <Typography
           variant="h4"
           sx={{
             fontFamily: '"Sora", sans-serif',
             fontWeight: 700,
-            color: isDark ? '#ede9fe' : '#2e1065',
+            color: isDark ? '#f8f7ff' : '#2e1065',
             letterSpacing: '-0.02em',
-            mb: 0.5,
+            mb: 1,
           }}
         >
           Tableau de bord
         </Typography>
         <Typography
-          variant="body2"
-          sx={{ color: isDark ? 'rgba(167,139,250,0.6)' : 'rgba(109,40,217,0.55)', fontSize: '0.875rem' }}
+          variant="body1"
+          sx={{ color: isDark ? 'rgba(237,233,254,0.85)' : 'rgba(46,16,101,0.72)', maxWidth: 760 }}
         >
-          Vue d'ensemble de vos événements et sessions.
+          Vos statistiques principales sont affichées ici. Cliquez sur une carte pour accéder directement aux pages Événements, Sessions, Intervenants et Salles.
         </Typography>
       </Box>
 
-      {/* Stat tiles */}
-      <Grid container spacing={2.5} mb={4}>
-        {[
-          { value: '—', label: 'Événements', sub: 'au total' },
-          { value: '—', label: 'Sessions', sub: 'programmées' },
-          { value: '—', label: 'Intervenants', sub: 'enregistrés' },
-          { value: '—', label: 'Salles', sub: 'disponibles' },
-        ].map((stat) => (
-          <Grid item xs={6} md={3} key={stat.label}>
-            <StatTile {...stat} />
+      <Grid container spacing={3} mb={4}>
+        {stats.map((stat) => (
+          <Grid item xs={12} sm={6} md={3} key={stat.label}>
+            <StatTile value={stat.value} label={stat.label} sub={stat.sub} onClick={() => navigate(stat.path)} loading={loadingStats} />
           </Grid>
         ))}
       </Grid>
 
-      {/* Chart */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent sx={{ pb: '24px !important' }}>
-          <Box mb={3}>
-            <Typography
-              variant="h6"
-              sx={{
-                fontFamily: '"Sora", sans-serif',
-                fontWeight: 600,
-                color: isDark ? '#ede9fe' : '#2e1065',
-                fontSize: '0.95rem',
-              }}
-            >
-              Activité de la semaine
-            </Typography>
-            <Typography
-              variant="caption"
-              sx={{ color: isDark ? 'rgba(167,139,250,0.5)' : 'rgba(109,40,217,0.45)', fontSize: '0.75rem' }}
-            >
-              Sessions et intervenants planifiés par jour
-            </Typography>
-          </Box>
-
-          <ResponsiveContainer width="100%" height={240}>
-            <AreaChart data={sessionData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-              <defs>
-                <linearGradient id="sessionsGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={chartAccent} stopOpacity={0.3} />
-                  <stop offset="95%" stopColor={chartAccent} stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="speakersGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={chartSecondary} stopOpacity={0.25} />
-                  <stop offset="95%" stopColor={chartSecondary} stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
-              <XAxis
-                dataKey="day"
-                tick={{ fontSize: 11, fill: axisColor, fontFamily: 'Inter' }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fontSize: 11, fill: axisColor, fontFamily: 'Inter' }}
-                axisLine={false}
-                tickLine={false}
-                allowDecimals={false}
-              />
-              <Tooltip content={<CustomTooltip />} cursor={{ stroke: chartAccent, strokeWidth: 1, strokeDasharray: '4 4' }} />
-              <Area
-                type="monotone"
-                dataKey="sessions"
-                stroke={chartAccent}
-                strokeWidth={2}
-                fill="url(#sessionsGrad)"
-                dot={false}
-                activeDot={{ r: 4, fill: chartAccent, strokeWidth: 0 }}
-              />
-              <Area
-                type="monotone"
-                dataKey="speakers"
-                stroke={chartSecondary}
-                strokeWidth={2}
-                fill="url(#speakersGrad)"
-                dot={false}
-                activeDot={{ r: 4, fill: chartSecondary, strokeWidth: 0 }}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-
-          {/* Legend */}
-          <Box display="flex" gap={3} mt={1.5} pl={0.5}>
-            {[
-              { color: chartAccent, label: 'Sessions' },
-              { color: chartSecondary, label: 'Intervenants' },
-            ].map((leg) => (
-              <Box key={leg.label} display="flex" alignItems="center" gap={0.75}>
-                <Box sx={{ width: 20, height: 2, borderRadius: 1, bgcolor: leg.color }} />
-                <Typography sx={{ fontSize: '0.72rem', color: isDark ? 'rgba(167,139,250,0.6)' : 'rgba(109,40,217,0.5)', fontFamily: 'Inter' }}>
-                  {leg.label}
-                </Typography>
-              </Box>
-            ))}
-          </Box>
-        </CardContent>
-      </Card>
-
-      {/* Quick links */}
-      <Card>
-        <CardContent>
-          <Typography
-            variant="overline"
+      <Grid container spacing={3}>
+        <Grid item xs={12}>
+          <Card
             sx={{
-              fontSize: '0.68rem',
-              color: isDark ? 'rgba(167,139,250,0.5)' : 'rgba(109,40,217,0.45)',
-              letterSpacing: '0.08em',
-              display: 'block',
-              mb: 1.5,
+              minHeight: 460,
+              border: isDark ? '1px solid rgba(167,139,250,0.12)' : '1px solid rgba(109,40,217,0.12)',
+              boxShadow: isDark ? '0 18px 44px rgba(0,0,0,0.16)' : '0 18px 44px rgba(109,40,217,0.08)',
+              background: isDark ? '#120728' : '#ffffff',
             }}
           >
-            Accès rapide
-          </Typography>
-          <Box display="flex" flexDirection="column" gap={0.75}>
-            {[
-              { label: 'Frontend public', href: 'http://localhost:3000' },
-              { label: 'API Backend — Health check', href: 'http://localhost:4000/health' },
-            ].map((link) => (
-              <Box key={link.href} display="flex" alignItems="center" gap={1.5}>
-                <Box
-                  sx={{
-                    width: 4,
-                    height: 4,
-                    borderRadius: '50%',
-                    bgcolor: isDark ? '#a78bfa' : '#7c3aed',
-                    flexShrink: 0,
-                  }}
-                />
-                <Typography variant="body2" sx={{ fontSize: '0.82rem', color: isDark ? 'rgba(237,233,254,0.7)' : 'rgba(46,16,101,0.65)' }}>
-                  {link.label}
-                  {' — '}
-                  <a
-                    href={link.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      color: isDark ? '#a78bfa' : '#6d28d9',
-                      textDecoration: 'none',
-                      fontWeight: 500,
-                    }}
-                  >
-                    {link.href}
-                  </a>
-                </Typography>
+            <CardContent sx={{ pb: 3, px: { xs: 2, md: 4 }, pt: 3 }}>
+              <Box mb={3} display="flex" flexDirection={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} gap={2}>
+                <Box>
+                  <Typography variant="h6" sx={{ fontFamily: '"Sora", sans-serif', fontWeight: 700, color: isDark ? '#f8f7ff' : '#2e1065' }}>
+                    Activité de la semaine
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: isDark ? 'rgba(167,139,250,0.7)' : 'rgba(109,40,217,0.55)' }}>
+                    Graphique des sessions et intervenants planifiés sur les 7 derniers jours.
+                  </Typography>
+                </Box>
               </Box>
-            ))}
-          </Box>
-        </CardContent>
-      </Card>
+
+              <Box sx={{ width: '100%', overflow: 'hidden' }}>
+                <ResponsiveContainer width="100%" height={360}>
+                  <AreaChart data={sessionData} margin={{ top: 12, right: 12, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="sessionsGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={chartAccent} stopOpacity={0.28} />
+                        <stop offset="95%" stopColor={chartAccent} stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="speakersGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={chartSecondary} stopOpacity={0.24} />
+                        <stop offset="95%" stopColor={chartSecondary} stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
+                    <XAxis dataKey="day" tick={{ fontSize: 12, fill: axisColor, fontFamily: 'Inter' }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 12, fill: axisColor, fontFamily: 'Inter' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                    <Tooltip content={<CustomTooltip />} cursor={{ stroke: chartAccent, strokeWidth: 1, strokeDasharray: '4 4' }} />
+                    <Area type="monotone" dataKey="sessions" stroke={chartAccent} strokeWidth={2} fill="url(#sessionsGrad)" dot={false} activeDot={{ r: 5, fill: chartAccent, strokeWidth: 0 }} />
+                    <Area type="monotone" dataKey="speakers" stroke={chartSecondary} strokeWidth={2} fill="url(#speakersGrad)" dot={false} activeDot={{ r: 5, fill: chartSecondary, strokeWidth: 0 }} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </Box>
+
+              <Box display="flex" gap={3} mt={2} flexWrap="wrap">
+                {[
+                  { color: chartAccent, label: 'Sessions' },
+                  { color: chartSecondary, label: 'Intervenants' },
+                ].map((legend) => (
+                  <Box key={legend.label} display="flex" alignItems="center" gap={0.75}>
+                    <Box sx={{ width: 24, height: 2, borderRadius: 1, bgcolor: legend.color }} />
+                    <Typography sx={{ fontSize: '0.75rem', color: isDark ? 'rgba(167,139,250,0.65)' : 'rgba(109,40,217,0.6)', fontFamily: 'Inter' }}>
+                      {legend.label}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
     </Box>
   );
 };
