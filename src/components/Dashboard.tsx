@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Card,
@@ -258,8 +258,10 @@ export const Dashboard = () => {
 
           dayEntry.sessions += 1;
 
-          const speakers = Array.isArray(session.speaker_ids) ? session.speaker_ids : [];
-          speakers.forEach((speakerId) => {
+          const speakers: Array<string | number> = Array.isArray(session.speaker_ids)
+            ? session.speaker_ids
+            : [];
+          speakers.forEach((speakerId: string | number) => {
             dayEntry.speakerIds.add(String(speakerId));
           });
         });

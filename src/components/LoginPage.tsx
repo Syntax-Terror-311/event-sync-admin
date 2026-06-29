@@ -375,6 +375,28 @@ export const LoginPage: React.FC = () => {
                       </AnimatePresence>
                     </MotionButton>
 
+                    <Button
+                      fullWidth
+                      href="http://localhost:3000"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      sx={{
+                        py: 1.4,
+                        mb: 2,
+                        borderRadius: 1.5,
+                        border: `1px solid ${isDark ? 'rgba(167,139,250,0.15)' : 'rgba(109,40,217,0.15)'}`,
+                        color: isDark ? '#ede9fe' : '#4c1d95',
+                        background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(241,245,255,0.9)',
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        '&:hover': {
+                          background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(236,232,255,0.95)',
+                        },
+                      }}
+                    >
+                      Voir le site public EventSync
+                    </Button>
+
                     <Typography
                       variant="caption"
                       sx={{
