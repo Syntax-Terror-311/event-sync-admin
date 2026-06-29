@@ -1,7 +1,7 @@
 import {
   List, Datagrid, TextField, DateField, EditButton, DeleteButton,
   Edit, Create, SimpleForm, TextInput, DateTimeInput, required,
-  Show, SimpleShowLayout,useNotify, useRedirect
+  useNotify, useRedirect
 } from 'react-admin';
 
 export const EventList = () => (

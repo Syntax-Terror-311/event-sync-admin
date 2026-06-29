@@ -13,7 +13,6 @@ export const dataProvider: DataProvider = {
   getList: async (resource, params) => {
     let url = `${API_URL}/${resource}`;
 
-    // Gestion spéciale pour rooms (nécessite event_id)
     if (resource === 'rooms' && params.filter?.event_id) {
       url += `?event_id=${params.filter.event_id}`;
     }
@@ -22,7 +21,6 @@ export const dataProvider: DataProvider = {
 
     let data = Array.isArray(json) ? json : [];
 
-    // Filtrage + tri côté client (React Admin attend ça)
     if (params.filter) {
       data = data.filter((item: any) => {
         return Object.entries(params.filter).every(([key, value]) => {
@@ -85,11 +83,9 @@ export const dataProvider: DataProvider = {
 
   delete: async (resource, params) => {
   await httpClient(`${API_URL}/${resource}/${params.id}`, { method: 'DELETE' });
-  // Return the deleted record. If previousData is available, use it; otherwise cast minimal object.
   return { data: (params as any).previousData ?? ({ id: params.id } as any) };
 },
 
-  // Méthodes non utilisées pour l'instant
   deleteMany: () => Promise.resolve({ data: [] }),
   updateMany: () => Promise.resolve({ data: [] }),
 };
