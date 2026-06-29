@@ -1,17 +1,42 @@
 import {
-  List, Datagrid, TextField, EditButton, DeleteButton,
-  Edit, Create, SimpleForm, TextInput, required,
-  ImageField, ImageInput,
+  List,
+  Datagrid,
+  TextField,
+  DeleteButton,
+  Edit,
+  Create,
+  Show,
+  SimpleShowLayout,
+  SimpleForm,
+  TextInput,
+  required,
+  ImageField,
+  Filter,
+  useRecordContext,
+  TopToolbar,
+  EditButton,
+  ListButton,
 } from 'react-admin';
 
+const SpeakerTitle = () => {
+  const record = useRecordContext();
+  return <span>{record ? `Intervenant : ${record.full_name}` : ''}</span>;
+};
+
+const SpeakerFilter = (props: any) => (
+  <Filter {...props}>
+    <TextInput source="full_name" label="Nom" alwaysOn />
+    <TextInput source="twitter" label="Twitter" />
+    <TextInput source="linkedin" label="LinkedIn" />
+  </Filter>
+);
+
 export const SpeakerList = () => (
-  <List sort={{ field: 'full_name', order: 'ASC' }}>
-    <Datagrid rowClick="edit">
-      <TextField source="id" label="ID" />
+  <List filters={<SpeakerFilter />} sort={{ field: 'full_name', order: 'ASC' }}>
+    <Datagrid rowClick="show">
       <TextField source="full_name" label="Nom" />
       <TextField source="twitter" label="Twitter" />
       <TextField source="linkedin" label="LinkedIn" />
-      <EditButton />
       <DeleteButton />
     </Datagrid>
   </List>
@@ -34,8 +59,34 @@ export const SpeakerCreate = () => (
   </Create>
 );
 
+const SpeakerShowActions = () => (
+  <TopToolbar>
+    <ListButton label="Retour" />
+    <EditButton />
+  </TopToolbar>
+);
+
+const SpeakerEditActions = () => (
+  <TopToolbar>
+    <ListButton label="Retour" />
+  </TopToolbar>
+);
+
+export const SpeakerShow = () => (
+  <Show title={<SpeakerTitle />} actions={<SpeakerShowActions />}>
+    <SimpleShowLayout>
+      <ImageField source="photo_url" label="Photo" />
+      <TextField source="full_name" label="Nom" />
+      <TextField source="bio" label="Biographie" />
+      <TextField source="twitter" label="Twitter" />
+      <TextField source="linkedin" label="LinkedIn" />
+      <TextField source="website" label="Site web" />
+    </SimpleShowLayout>
+  </Show>
+);
+
 export const SpeakerEdit = () => (
-  <Edit title="Modifier l'intervenant">
+  <Edit title={<SpeakerTitle />} actions={<SpeakerEditActions />}>
     <SpeakerForm />
   </Edit>
 );
