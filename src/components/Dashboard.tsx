@@ -20,15 +20,23 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 
-const sessionData = [
-  { day: 'Lun', sessions: 280, speakers: 130 },
-  { day: 'Mar', sessions: 420, speakers: 210 },
-  { day: 'Mer', sessions: 360, speakers: 160 },
-  { day: 'Jeu', sessions: 520, speakers: 250 },
-  { day: 'Ven', sessions: 470, speakers: 230 },
-  { day: 'Sam', sessions: 530, speakers: 280 },
-  { day: 'Dim', sessions: 610, speakers: 320 },
-];
+const getDayLabel = (date: Date) => {
+  return ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'][date.getDay()];
+};
+
+const buildWeekData = () => {
+  const today = new Date();
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() - (6 - index));
+    return {
+      dateKey: date.toISOString().slice(0, 10),
+      day: getDayLabel(date),
+      sessions: 0,
+      speakerIds: new Set<string>(),
+    };
+  });
+};
 
 const formatCompactNumber = (value: number) => {
   if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1).replace(/\.0$/, '')}B`;
@@ -199,28 +207,68 @@ export const Dashboard = () => {
   const [stats, setStats] = useState(() =>
     resourceStats.map((resource) => ({ ...resource, value: 0 }))
   );
+  const [sessionData, setSessionData] = useState(
+    buildWeekData().map((entry) => ({ day: entry.day, sessions: 0, speakers: 0 }))
+  );
   const [loadingStats, setLoadingStats] = useState(true);
 
   useEffect(() => {
     let mounted = true;
     const loadStats = async () => {
       try {
-        const responses = await Promise.all(
-          resourceStats.map((resource) =>
-            dataProvider.getList(resource.key, {
-              pagination: { page: 1, perPage: 1 },
-              sort: { field: 'id', order: 'ASC' },
-              filter: {},
-            })
-          )
-        );
+        const [statsResponses, sessionsResponse] = await Promise.all([
+          Promise.all(
+            resourceStats.map((resource) =>
+              dataProvider.getList(resource.key, {
+                pagination: { page: 1, perPage: 1 },
+                sort: { field: 'id', order: 'ASC' },
+                filter: {},
+              })
+            )
+          ),
+          dataProvider.getList('sessions', {
+            pagination: { page: 1, perPage: 10000 },
+            sort: { field: 'start_time', order: 'ASC' },
+            filter: {},
+          }),
+        ]);
 
         if (!mounted) return;
 
         setStats(
-          responses.map((response, index) => ({
+          statsResponses.map((response, index) => ({
             ...resourceStats[index],
             value: response.total ?? 0,
+          }))
+        );
+
+        const sessions = Array.isArray(sessionsResponse.data) ? sessionsResponse.data : [];
+        const weekData = buildWeekData();
+
+        sessions.forEach((session: any) => {
+          const rawDate = session.start_time || session.date || session.created_at;
+          if (!rawDate) return;
+
+          const date = new Date(rawDate);
+          if (Number.isNaN(date.getTime())) return;
+
+          const dateKey = date.toISOString().slice(0, 10);
+          const dayEntry = weekData.find((entry) => entry.dateKey === dateKey);
+          if (!dayEntry) return;
+
+          dayEntry.sessions += 1;
+
+          const speakers = Array.isArray(session.speaker_ids) ? session.speaker_ids : [];
+          speakers.forEach((speakerId) => {
+            dayEntry.speakerIds.add(String(speakerId));
+          });
+        });
+
+        setSessionData(
+          weekData.map((entry) => ({
+            day: entry.day,
+            sessions: entry.sessions,
+            speakers: entry.speakerIds.size,
           }))
         );
       } catch (error) {
