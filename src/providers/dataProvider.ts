@@ -70,7 +70,7 @@ export const dataProvider: DataProvider = {
       method: 'POST',
       body: JSON.stringify(params.data),
     });
-    return { data: json };
+    return { data: json ?? params.data };
   },
 
   update: async (resource, params) => {
@@ -78,13 +78,13 @@ export const dataProvider: DataProvider = {
       method: 'PUT',
       body: JSON.stringify(params.data),
     });
-    return { data: json };
+    return { data: json ?? params.data };
   },
 
   delete: async (resource, params) => {
-  await httpClient(`${API_URL}/${resource}/${params.id}`, { method: 'DELETE' });
-  return { data: (params as any).previousData ?? ({ id: params.id } as any) };
-},
+    const { json } = await httpClient(`${API_URL}/${resource}/${params.id}`, { method: 'DELETE' });
+    return { data: (params as any).previousData ?? json ?? ({ id: params.id } as any) };
+  },
 
   deleteMany: () => Promise.resolve({ data: [] }),
   updateMany: () => Promise.resolve({ data: [] }),

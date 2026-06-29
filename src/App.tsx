@@ -8,10 +8,10 @@ import { authProvider } from './providers/authProvider';
 import { dataProvider } from './providers/dataProvider';
 import { Dashboard } from './components/Dashboard';
 import { LoginPage } from './components/LoginPage';
-import { EventList, EventCreate, EventEdit } from './pages/Events';
-import { SessionList, SessionCreate, SessionEdit } from './pages/Sessions';
-import { SpeakerList, SpeakerCreate, SpeakerEdit } from './pages/Speakers';
-import { RoomList, RoomCreate, RoomEdit } from './pages/Rooms';
+import { EventList, EventCreate, EventEdit, EventShow } from './pages/Events';
+import { SessionList, SessionCreate, SessionEdit, SessionShow } from './pages/Sessions';
+import { SpeakerList, SpeakerCreate, SpeakerEdit, SpeakerShow } from './pages/Speakers';
+import { RoomList, RoomCreate, RoomEdit, RoomShow } from './pages/Rooms';
 import { darkTheme, lightTheme } from './theme';
 
 export default function App() {
@@ -29,6 +29,7 @@ export default function App() {
       <Resource
         name="events"
         list={EventList}
+        show={EventShow}
         create={EventCreate}
         edit={EventEdit}
         icon={EventIcon}
@@ -37,6 +38,7 @@ export default function App() {
       <Resource
         name="sessions"
         list={SessionList}
+        show={SessionShow}
         create={SessionCreate}
         edit={SessionEdit}
         icon={ViewAgendaIcon}
@@ -45,6 +47,7 @@ export default function App() {
       <Resource
         name="speakers"
         list={SpeakerList}
+        show={SpeakerShow}
         create={SpeakerCreate}
         edit={SpeakerEdit}
         icon={PeopleIcon}
@@ -53,6 +56,7 @@ export default function App() {
       <Resource
         name="rooms"
         list={RoomList}
+        show={RoomShow}
         create={RoomCreate}
         edit={RoomEdit}
         icon={RoomIcon}
